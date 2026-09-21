@@ -15,6 +15,16 @@ git submodule update --init --recursive
 Build the APKs in the relevant submodule according to its own instructions.
 Do not commit generated APKs or private signing keys to this repository.
 
+For the customized main app, the collection build script uses the configured
+private signing key and places the APK in the external build tree:
+
+```sh
+./scripts/build-termux.sh
+```
+
+The installed app provides `termux-identity USERNAME HOSTNAME` to configure
+the username and hostname without a first-run GUI.
+
 ## Install
 
 Build the APKs in the relevant submodule first, connect the phone by USB (or
