@@ -15,7 +15,21 @@ git submodule update --init --recursive
 Build the APKs in the relevant submodule according to its own instructions.
 Do not commit generated APKs or private signing keys to this repository.
 
-## USB debugging enabled
+## Install
+
+Build the APKs in the relevant submodule first, connect the phone by USB (or
+make its Wi-Fi debugging endpoint available), then simply run:
+
+```sh
+./scripts/install-termux.sh
+```
+
+The script finds the newest APK for each filename under this collection. It
+uses any already-connected USB or Wi-Fi ADB transport. If several authorised
+devices are connected, it asks which one to use. `--serial SERIAL` can select
+one non-interactively.
+
+## USB or Wi-Fi debugging enabled
 
 On the phone, enable **Developer options → USB debugging**, connect the USB
 cable, and approve the computer-authorisation prompt. Verify the device:
@@ -24,39 +38,27 @@ cable, and approve the computer-authorisation prompt. Verify the device:
 adb devices
 ```
 
-Then install one or more APKs with:
-
-```sh
-./scripts/install-termux.sh path/to/termux-app.apk
-```
-
-For multiple packages, pass each APK as an argument. To select a particular
-device, set `ANDROID_SERIAL` or use `--serial`:
+The script uses `adb install -r`, preserving the application data. You can
+also pass explicit APK paths instead of using automatic discovery:
 
 ```sh
 ./scripts/install-termux.sh --serial SERIAL path/to/termux-app.apk
 ```
 
-The script uses `adb install -r`, preserving the application data. It checks
-that the selected device is present before installing.
-
 ## USB debugging disabled
 
-ADB cannot install an APK when USB debugging is disabled. This is an Android
-security boundary; a USB cable alone does not provide an installation API.
-
-You can still use the helper to copy the APK to a directory where the phone's
-storage is mounted (for example, an MTP-mounted `Download` directory):
+ADB cannot install an APK when debugging is disabled. The script therefore
+falls back to mounted phone storage, choosing a `Download` directory when one
+is visible through MTP/GVFS. You can also specify it explicitly:
 
 ```sh
-./scripts/install-termux.sh --copy-to /path/to/phone/Download \
-    path/to/termux-app.apk
+./scripts/install-termux.sh --copy-to /path/to/phone/Download
 ```
 
 After copying, open the APK on the phone and confirm the Android package
 installer prompt. The phone may require allowing the file manager to install
 unknown apps. If the phone storage is not mounted, copy the APK by MTP or
-another user-approved file-transfer method, then open it on the phone.
+another user-approved file-transfer method, then rerun the script.
 
 ## Package order
 
