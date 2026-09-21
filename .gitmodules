@@ -1,0 +1,15 @@
+[submodule "termux-api"]
+	path = termux-api
+	url = https://github.com/rebroad/termux-api.git
+[submodule "termux-app"]
+	path = termux-app
+	url = https://github.com/rebroad/termux-app.git
+[submodule "termux-boot"]
+	path = termux-boot
+	url = https://github.com/rebroad/termux-boot.git
+[submodule "termux-exec-package"]
+	path = termux-exec-package
+	url = https://github.com/rebroad/termux-exec-package.git
+[submodule "termux-tasker"]
+	path = termux-tasker
+	url = https://github.com/rebroad/termux-tasker.git

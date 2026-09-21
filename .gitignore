@@ -1,0 +1,13 @@
+# Local build output and private signing material.
+*.apk
+*.aab
+*.jks
+*.keystore
+*.pass
+build/
+*.build/
+termux-app.build
+termux-exec-package.build
+termux-app-backup-fix/
+termux-app.build/
+termux-exec-package.build/
