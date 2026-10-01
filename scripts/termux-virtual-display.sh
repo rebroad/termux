@@ -99,7 +99,7 @@ if [[ -z "${SCRCPY_SERVER_PATH:-}" ]]; then
             ;;
     esac
 fi
-scrcpy_args=("-s" "$serial" "--new-display=$display_spec" "--no-audio" \
+scrcpy_args=("-s" "$serial" "--new-display=$display_spec" "--no-vd-system-decorations" "--no-audio" \
     "--start-app=+com.termux" "--pause-on-exit=false")
 if ((headless)); then
     scrcpy_args+=(--no-window)
