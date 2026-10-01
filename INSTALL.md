@@ -55,6 +55,22 @@ also pass explicit APK paths instead of using automatic discovery:
 ./scripts/install-termux.sh --serial SERIAL path/to/termux-app.apk
 ```
 
+## Isolated virtual-display testing
+
+To test Termux without taking over the phone's primary display, use the
+scrcpy virtual-display helper:
+
+```sh
+./scripts/termux-virtual-display.sh
+```
+
+It selects the only authorised ADB device automatically, or asks which device
+to use when several are connected. The helper starts Termux on a separate
+Android virtual display; close scrcpy to remove it. Use `--headless` when no
+local video window is wanted. The helper looks for `scrcpy` in `PATH`, the
+standard `~/src/scrcpy` build locations, and `/var/tmp/scrcpy-build`; set
+`SCRCPY_BIN` and `SCRCPY_SERVER_PATH` when using a custom build.
+
 ## USB debugging disabled
 
 ADB cannot install an APK when debugging is disabled. The script therefore
