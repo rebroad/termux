@@ -67,7 +67,9 @@ scrcpy virtual-display helper:
 It selects the only authorised ADB device automatically, or asks which device
 to use when several are connected. The helper starts Termux on a separate
 Android virtual display; close scrcpy to remove it. Use `--headless` when no
-local video window is wanted. The helper looks for `scrcpy` in `PATH`, the
+local video window is wanted. Use the customized scrcpy fork, which keeps the
+keyboard on new virtual displays even in headless mode.
+The helper looks for `scrcpy` in `PATH`, the
 standard `~/src/scrcpy` build locations, and `/var/tmp/scrcpy-build`; set
 `SCRCPY_BIN` and `SCRCPY_SERVER_PATH` when using a custom build.
 

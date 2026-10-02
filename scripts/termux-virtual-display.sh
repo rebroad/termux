@@ -74,6 +74,14 @@ find_scrcpy() {
         printf '%s\n' "$SCRCPY_BIN"
         return
     fi
+    local source_dir external_candidate
+    source_dir=$(readlink -f "$HOME/src/scrcpy")
+    case "$source_dir" in
+        /mnt/kingston/@home/*)
+            external_candidate="/mnt/kingston/builds/${source_dir#/mnt/kingston/@home/}.make/app/scrcpy"
+            [[ -x "$external_candidate" ]] && { printf '%s\n' "$external_candidate"; return; }
+            ;;
+    esac
     if command -v scrcpy >/dev/null; then
         command -v scrcpy
         return
@@ -100,7 +108,7 @@ if [[ -z "${SCRCPY_SERVER_PATH:-}" ]]; then
     esac
 fi
 scrcpy_args=("-s" "$serial" "--new-display=$display_spec" "--no-vd-system-decorations" "--no-audio" \
-    "--start-app=+com.termux" "--pause-on-exit=false")
+    "--start-app=com.termux" "--pause-on-exit=false")
 if ((headless)); then
     scrcpy_args+=(--no-window)
 fi
