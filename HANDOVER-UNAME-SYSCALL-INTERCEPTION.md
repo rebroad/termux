@@ -14,12 +14,16 @@ collection repository pins both submodules at the commits below.
 
 | Repository | Remote | Commit | Change |
 | --- | --- | --- | --- |
-| `rebroad/termux` | `https://github.com/rebroad/termux.git` | `1b09cdf` | Feature wiring and the exec package submodule pointer; fixes portable shell test fixture and Bash interpreter test expectations |
+| `rebroad/termux` | `https://github.com/rebroad/termux.git` | `4a9b271` | Branch head, including the handover document |
 | `rebroad/termux-exec-package` | `https://github.com/rebroad/termux-exec-package.git` | `a537671` | Seccomp/ptrace raw `uname` interception, `#!/bin/sh` fixture, and missing-interpreter test compatibility |
 | `rebroad/termux-app` | `https://github.com/rebroad/termux-app.git` | `c2868175` | Default-on debugging preference and process environment wiring |
 
 The latest remote branch heads were checked and matched those commits. Clone
 the collection repository and initialize its pinned submodules:
+
+The collection branch also contains feature commit `26519a4`, submodule pointer
+updates `541cc28` and `1b09cdf`, and this handover commit. The exec-package
+branch contains the implementation commit `37f31e7` and its fixture/test fixes.
 
 ```sh
 git clone --branch uname-syscall-intercept --recurse-submodules \
