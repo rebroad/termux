@@ -4,12 +4,8 @@ set -euo pipefail
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 collection_dir=$(cd -- "${script_dir}/.." && pwd -P)
 api_source_dir="${collection_dir}/termux-api"
-if [[ "$api_source_dir" == *"/@home/"* ]]; then
-    api_build_dir="${api_source_dir/\/\@home\//\/builds\/}.build"
-else
-    api_build_dir="${api_source_dir}.build"
-fi
-api_build_dir="${TERMUX_API_BUILD_DIR:-$api_build_dir}"
+build_root="${TERMUX_BUILD_ROOT:-$HOME/src/termux.build}"
+api_build_dir="${TERMUX_API_BUILD_DIR:-$build_root/termux-api}"
 remote_host="${TERMUX_API_SSH_TARGET:-flip7}"
 remote_downloads="/storage/emulated/0/Download"
 android_sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-${HOME}/Android/Sdk}}"

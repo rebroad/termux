@@ -3,27 +3,14 @@ set -euo pipefail
 
 collection_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 app_source_dir="$collection_dir/termux-app"
-if [[ -d /mnt/kingston/builds ]]; then
-    app_build_dir="/mnt/kingston/builds/rebroad/src/termux-app.build"
-else
-    app_build_dir="$app_source_dir"
-fi
-if [[ -d /mnt/kingston/builds ]]; then
-    termux_exec_build_dir="/mnt/kingston/builds/rebroad/src/termux-exec-package.build"
-else
-    termux_exec_build_dir="$collection_dir/termux-exec-package"
-fi
+build_root="${TERMUX_BUILD_ROOT:-$HOME/src/termux.build}"
+app_build_dir="$build_root/termux-app"
+termux_exec_build_dir="${TERMUX_EXEC_BUILD_DIR:-$build_root/termux-exec-package}"
 keystore="${HOME:?}/.config/rebroad-termux/termux-release.jks"
 password_file="${HOME:?}/.config/rebroad-termux/termux-release.pass"
 apk="$app_build_dir/app/build/outputs/apk/release/termux-app_apt-android-7-release_universal.apk"
 custom_exec_output="$termux_exec_build_dir/build/output/usr"
-if [[ -f "$custom_exec_output/lib/libtermux-exec_nos_c_tre.so" ]]; then
-    custom_exec_packaging="$termux_exec_build_dir/build/output/packaging/debian"
-elif [[ -f "$collection_dir/termux-exec-package/build/output/usr/lib/libtermux-exec_nos_c_tre.so" ]]; then
-    custom_exec_output="$collection_dir/termux-exec-package/build/output/usr"
-    custom_exec_packaging="$collection_dir/termux-exec-package/build/output/packaging/debian"
-fi
-
+custom_exec_packaging="$termux_exec_build_dir/build/output/packaging/debian"
 [[ -x "$app_source_dir/gradlew" ]] || { echo "Missing Termux Gradle wrapper: $app_source_dir/gradlew" >&2; exit 1; }
 [[ -f "$keystore" ]] || { echo "Missing signing keystore: $keystore" >&2; exit 1; }
 [[ -f "$password_file" ]] || { echo "Missing signing password file: $password_file" >&2; exit 1; }
@@ -40,17 +27,16 @@ command -v cpto >/dev/null || { echo "cpto is required" >&2; exit 1; }
 command -v zip >/dev/null || { echo "zip is required" >&2; exit 1; }
 
 echo "Synchronizing Termux app source"
-if [[ "$app_build_dir" != "$app_source_dir" ]]; then
-    cpto --no-lngit "$app_source_dir" "$app_build_dir"
-else
-    echo "Build root unavailable; using source directory"
-fi
+mkdir -p "$app_build_dir"
+cpto --no-lngit "$app_source_dir" "$app_build_dir"
 
 echo "Building signed Termux APK"
 pass=$(<"$password_file")
 export TERMUX_REBROAD_SIGNING_STORE_FILE="$keystore"
 export TERMUX_REBROAD_SIGNING_STORE_PASSWORD="$pass"
 export TERMUX_REBROAD_SIGNING_KEY_ALIAS=rebroad-termux
+app_git_commit=$(git -C "$app_source_dir" rev-parse HEAD | cut -c1-10)
+export TERMUX_GIT_COMMIT="$app_git_commit"
 export TERMUX_REBROAD_SIGNING_KEY_PASSWORD="$pass"
 unset pass
 
