@@ -65,6 +65,8 @@ export TERMUX_REBROAD_SIGNING_STORE_FILE="$keystore"
 export TERMUX_REBROAD_SIGNING_STORE_PASSWORD="$signing_password"
 export TERMUX_REBROAD_SIGNING_KEY_ALIAS=rebroad-termux
 export TERMUX_REBROAD_SIGNING_KEY_PASSWORD="$signing_password"
+api_git_commit=$(git -C "$api_source_dir" rev-parse HEAD)
+export TERMUX_GIT_COMMIT="${api_git_commit:0:10}"
 unset signing_password
 
 if ! (cd -- "$api_build_dir" && ./gradlew :app:assembleRelease --no-daemon --console=plain) >"$build_log" 2>&1; then
