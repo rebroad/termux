@@ -12,8 +12,13 @@ apk="$app_build_dir/app/build/outputs/apk/release/termux-app_apt-android-7-relea
 custom_exec_output="$termux_exec_build_dir/build/output/usr"
 custom_exec_packaging="$termux_exec_build_dir/build/output/packaging/debian"
 [[ -x "$app_source_dir/gradlew" ]] || { echo "Missing Termux Gradle wrapper: $app_source_dir/gradlew" >&2; exit 1; }
-[[ -f "$keystore" ]] || { echo "Missing signing keystore: $keystore" >&2; exit 1; }
-[[ -f "$password_file" ]] || { echo "Missing signing password file: $password_file" >&2; exit 1; }
+signing_enabled=0
+if [[ -f "$keystore" && -f "$password_file" ]]; then
+    signing_enabled=1
+elif [[ "${TERMUX_ALLOW_UNSIGNED_BUILD:-0}" != 1 ]]; then
+    echo "Missing signing keystore or password file; set TERMUX_ALLOW_UNSIGNED_BUILD=1 only for a build that will be signed locally" >&2
+    exit 1
+fi
 [[ -f "$custom_exec_output/lib/libtermux-exec-ld-preload.so" ]] || {
     echo "Missing customized termux-exec build output: $custom_exec_output" >&2
     exit 1
@@ -35,15 +40,19 @@ else
     cpto --no-lngit "$app_source_dir" "$app_build_dir"
 fi
 
-echo "Building signed Termux APK"
-pass=$(<"$password_file")
-export TERMUX_REBROAD_SIGNING_STORE_FILE="$keystore"
-export TERMUX_REBROAD_SIGNING_STORE_PASSWORD="$pass"
-export TERMUX_REBROAD_SIGNING_KEY_ALIAS=rebroad-termux
+if [[ "$signing_enabled" == 1 ]]; then
+    echo "Building signed Termux APK"
+    pass=$(<"$password_file")
+    export TERMUX_REBROAD_SIGNING_STORE_FILE="$keystore"
+    export TERMUX_REBROAD_SIGNING_STORE_PASSWORD="$pass"
+    export TERMUX_REBROAD_SIGNING_KEY_ALIAS=rebroad-termux
+    export TERMUX_REBROAD_SIGNING_KEY_PASSWORD="$pass"
+    unset pass
+else
+    echo "Building unsigned Termux APK for local signing"
+fi
 app_git_commit=$(git -C "$app_source_dir" rev-parse HEAD | cut -c1-10)
 export TERMUX_GIT_COMMIT="$app_git_commit"
-export TERMUX_REBROAD_SIGNING_KEY_PASSWORD="$pass"
-unset pass
 
 if [[ -n "${PREFIX:-}" && -d "$PREFIX/tmp" ]]; then
     temp_dir="$PREFIX/tmp"
