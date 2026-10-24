@@ -38,8 +38,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          core_prefix="$RUNNER_TEMP/termux-core/usr"
-          mkdir -p "$core_prefix"
+          core_root="$RUNNER_TEMP/termux-core-root"
+          core_prefix="$core_root/data/data/com.termux/files/usr"
+          mkdir -p "$core_root"
           base_url=https://packages.termux.dev/apt/termux-main/pool/main/t
 
           # These pinned files match termux-core 0.4.0-1 from the signed Termux index.
@@ -56,7 +57,7 @@ jobs:
                 ;;
             esac
             printf '%s  %s\n' "$expected_sha256" "$deb" | sha256sum --check --status
-            dpkg-deb --extract "$deb" "$core_prefix"
+            dpkg-deb --extract "$deb" "$core_root"
           done
 
           test -d "$core_prefix/include/termux-core/termux/termux_core__nos__c"
@@ -69,7 +70,7 @@ jobs:
           ndk_root="$ANDROID_SDK_ROOT/ndk/29.0.14206865"
           make -C termux-exec-package \
             TERMUX_EXEC_PKG__ARCH=aarch64 \
-            TERMUX_CORE_PKG__INSTALL_PREFIX="$RUNNER_TEMP/termux-core/usr" \
+            TERMUX_CORE_PKG__INSTALL_PREFIX="$RUNNER_TEMP/termux-core-root/data/data/com.termux/files/usr" \
             CC="$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang"
 
       - name: Build unsigned release APK
