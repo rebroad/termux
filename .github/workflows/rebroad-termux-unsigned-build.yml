@@ -71,7 +71,7 @@ jobs:
           make -C termux-exec-package \
             TERMUX_EXEC_PKG__ARCH=aarch64 \
             TERMUX_CORE_PKG__INSTALL_PREFIX="$RUNNER_TEMP/termux-core-root/data/data/com.termux/files/usr" \
-            CC="$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang"
+            CC="$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
 
       - name: Build unsigned release APK
         run: ./scripts/build-termux.sh
