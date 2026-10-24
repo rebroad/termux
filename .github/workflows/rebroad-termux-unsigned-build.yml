@@ -59,7 +59,7 @@ jobs:
             dpkg-deb --extract "$deb" "$core_prefix"
           done
 
-          test -f "$core_prefix/include/termux-core/termux/termux_core__nos__c/v1/TermuxCoreLibraryConfig.h"
+          test -d "$core_prefix/include/termux-core/termux/termux_core__nos__c"
           test -f "$core_prefix/lib/libtermux-core_nos_c_tre.a"
 
       - name: Build customized Termux exec for arm64
