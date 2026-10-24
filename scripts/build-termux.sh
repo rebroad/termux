@@ -23,12 +23,17 @@ custom_exec_packaging="$termux_exec_build_dir/build/output/packaging/debian"
     exit 1
 }
 
-command -v cpto >/dev/null || { echo "cpto is required" >&2; exit 1; }
 command -v zip >/dev/null || { echo "zip is required" >&2; exit 1; }
 
-echo "Synchronizing Termux app source"
-mkdir -p "$app_build_dir"
-cpto --no-lngit "$app_source_dir" "$app_build_dir"
+if [[ -d "$app_build_dir" && "$app_build_dir" -ef "$app_source_dir" ]]; then
+    app_build_dir="$app_source_dir"
+    echo "Building Termux app in its source tree"
+else
+    command -v cpto >/dev/null || { echo "cpto is required" >&2; exit 1; }
+    echo "Synchronizing Termux app source into $app_build_dir"
+    mkdir -p "$app_build_dir"
+    cpto --no-lngit "$app_source_dir" "$app_build_dir"
+fi
 
 echo "Building signed Termux APK"
 pass=$(<"$password_file")
@@ -40,9 +45,26 @@ export TERMUX_GIT_COMMIT="$app_git_commit"
 export TERMUX_REBROAD_SIGNING_KEY_PASSWORD="$pass"
 unset pass
 
-build_log=$(mktemp /var/tmp/termux-build.XXXXXX.log)
-bootstrap_overlay=$(mktemp -d /var/tmp/termux-bootstrap.XXXXXX)
+if [[ -n "${PREFIX:-}" && -d "$PREFIX/tmp" ]]; then
+    temp_dir="$PREFIX/tmp"
+else
+    temp_dir=/var/tmp
+fi
+bootstrap_archive="$app_build_dir/app/src/main/cpp/bootstrap-aarch64.zip"
+archive_backup=
+if [[ -e "$bootstrap_archive" ]]; then
+    archive_backup=$(mktemp "$temp_dir/termux-bootstrap-original.XXXXXX.zip")
+    cp -p -- "$bootstrap_archive" "$archive_backup"
+fi
+build_log=$(mktemp "$temp_dir/termux-build.XXXXXX.log")
+bootstrap_overlay=$(mktemp -d "$temp_dir/termux-bootstrap.XXXXXX")
 cleanup() {
+    if [[ -n "$archive_backup" ]]; then
+        cp -p -- "$archive_backup" "$bootstrap_archive"
+        rm -f -- "$archive_backup"
+    else
+        rm -f -- "$bootstrap_archive"
+    fi
     rm -rf -- "$bootstrap_overlay"
     rm -f -- "$build_log"
 }
@@ -54,7 +76,10 @@ trap cleanup EXIT
         | grep -q 'create_default_hostname_file'; then
         echo "Customized bootstrap already present" >"$build_log"
     else
-        ./gradlew :app:downloadBootstraps --no-daemon --console=plain >"$build_log" 2>&1
+        if ! ./gradlew :app:downloadBootstraps --no-daemon --console=plain >"$build_log" 2>&1; then
+            tail -80 "$build_log" >&2
+            exit 1
+        fi
     fi
 )
 
