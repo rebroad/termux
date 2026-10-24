@@ -27,12 +27,9 @@ jobs:
           java-version: "17"
 
       - name: Set up Android SDK and NDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
-          packages: |
-            platforms;android-36
-            build-tools;36.0.0
-            ndk;29.0.14206865
+          packages: platforms;android-36,build-tools;36.0.0,ndk;29.0.14206865
 
       - name: Prepare Termux Core headers and static library
         shell: bash
