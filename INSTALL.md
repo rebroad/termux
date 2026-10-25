@@ -38,6 +38,29 @@ private signing key and places the APK in the external build tree:
 The installed app provides `termux-identity USERNAME HOSTNAME` to configure
 the username and hostname without a first-run GUI.
 
+## Install all three ReBroad APKs
+
+After downloading the main, Termux:API and Termux:Boot APKs from the same
+[ReBroad GitHub release](https://github.com/rebroad/termux/releases),
+install them individually (main app first). From the download directory:
+
+```sh
+adb install -r termux-app-0.118.0-rebroad.1.apk
+adb install -r termux-api-0.53.0-rebroad.1.apk
+adb install -r termux-boot-0.8.1-rebroad.1.apk
+```
+
+You can also tap each APK on the phone. These are three distinct Android
+packages; an Android split-APK installer is **not** appropriate for installing
+the separate applications as one package. If your old Termux:API or
+Termux:Boot is F-Droid-signed, back up app data and uninstall that companion
+before installing the public-test-key-signed ReBroad version.
+
+Inside the main Termux terminal, `pkg install termux-api` installs the
+command-line scripts that communicate with the Termux:API Android app. Open
+Termux:Boot once after installing it and put startup scripts in
+`~/.termux/boot/`; Android may require battery/autostart permissions.
+
 ## Install
 
 Build the APKs in the relevant submodule first, connect the phone by USB (or

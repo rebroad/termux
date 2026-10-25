@@ -1,0 +1,104 @@
+name: ReBroad Termux matching companion APKs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - termux-api
+      - termux-boot
+      - .github/workflows/rebroad-termux-companions.yml
+  workflow_run:
+    workflows: ["ReBroad Termux signed APK release"]
+    types: [completed]
+    branches: [master]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: companion-apks-${{ github.event.workflow_run.head_sha || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  build-companions:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    env:
+      TERMUX_CI_TEST_KEY_SIGNING: "1"
+    steps:
+      - name: Check out pinned Termux companions
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          submodules: recursive
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ""
+
+      - name: Install Android SDK platforms for both companion projects
+        run: sdkmanager --install "platforms;android-34" "platforms;android-35" "build-tools;35.0.0" "build-tools;34.0.0"
+
+      - name: Build Termux API test-key-signed release APK
+        working-directory: termux-api
+        run: ./gradlew :app:assembleRelease --no-daemon --console=plain
+
+      - name: Build Termux Boot test-key-signed release APK
+        working-directory: termux-boot
+        run: ./gradlew :app:assembleRelease --no-daemon --console=plain
+
+      - name: Verify both APKs, signing certificate and checksums
+        shell: bash
+        run: bash .github/scripts/package-companion-apks.sh
+
+      - name: Upload companion APK build artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: rebroad-termux-api-and-boot
+          path: dist/
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Attach companion APKs to the matching main-app release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          MAIN_WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          app_version=$(sed -n 's/^[[:space:]]*versionName "\([^"]*\)".*/\1/p' termux-app/app/build.gradle | head -n1)
+          [[ "$app_version" =~ ^[0-9A-Za-z.+-]+$ ]] || { echo "Unexpected main app version: $app_version" >&2; exit 1; }
+          if [[ -n "$MAIN_WORKFLOW_SHA" ]]; then
+            release_tag="rebroad-v${app_version}-${MAIN_WORKFLOW_SHA:0:7}"
+          else
+            release_tag=$(gh release list --limit 100 --json tagName --jq '.[].tagName' | grep -F "rebroad-v${app_version}-" | head -n1 || true)
+          fi
+          [[ -n "$release_tag" ]] || { echo "No release for main app $app_version" >&2; exit 1; }
+          echo "Adding same-key companion APKs to release: $release_tag"
+          gh release view "$release_tag" --json assets --jq '.assets[].name' | grep -Fxq "termux-app-${app_version}.apk"
+          gh release upload "$release_tag" dist/termux-api-*.apk dist/termux-boot-*.apk dist/SHA256SUMS-companions.txt --clobber
+
+          gh release view "$release_tag" --json assets --jq '.assets[].name' | grep -Fxq 'SHA256SUMS-companions.txt'
+          gh release view "$release_tag" --json assets --jq '.assets[].name' | grep -Eq '^termux-api-.*\.apk$'
+          gh release view "$release_tag" --json assets --jq '.assets[].name' | grep -Eq '^termux-boot-.*\.apk$'
+
+          existing_notes=$(gh release view "$release_tag" --json body --jq '.body')
+          if ! grep -Fq 'Termux:API and Termux:Boot companion APKs:' <<< "$existing_notes"; then
+            {
+              printf '%s\n\n' "$existing_notes"
+              echo 'Termux:API and Termux:Boot companion APKs: the companion files in Assets are'
+              echo 'signed with the SAME PUBLIC, UNTRUSTED test key as the ReBroad main app.'
+              echo 'Install each APK separately; use SHA256SUMS-companions.txt to verify them.'
+              echo 'Existing F-Droid-signed companion apps must be removed first (back up data).'
+            } > "$RUNNER_TEMP/companion-release-notes.md"
+            gh release edit "$release_tag" --notes-file "$RUNNER_TEMP/companion-release-notes.md"
+          fi

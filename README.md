@@ -20,6 +20,21 @@ compatible with F-Droid: the public, untrusted Termux test certificate is
 different from F-Droid's. Back up existing data before switching signing
 sources; companion apps must be signed with a matching key.
 
+## Companion APKs
+
+**Termux:API** and **Termux:Boot** are separate Android applications. Download
+their signed APKs from the **same GitHub release as the main Termux APK**:
+`termux-api-0.53.0-rebroad.1.apk` and
+`termux-boot-0.8.1-rebroad.1.apk`. The companion APKs are built from this
+repository's pinned `rebroad/termux-api` and `rebroad/termux-boot` forks and
+signed with the **same public untrusted Termux test certificate** as the
+main app. `SHA256SUMS-companions.txt` contains companion checksums.
+
+Install the main app first, then the individual companion APKs. They cannot
+all be installed as one standard APK. If you previously installed companion
+apps from F-Droid or another signer, Android requires uninstalling those
+incompatible companions after backing up anything important.
+
 See [INSTALL.md](INSTALL.md) for USB installation with or without ADB
 debugging.
 
