@@ -10,8 +10,8 @@ For the customized main Termux APK, visit
 [ReBroad Termux Releases](https://github.com/rebroad/termux/releases).
 Download `termux-app-VERSION.apk` and optionally verify it against
 `SHA256SUMS.txt`. The filename/version are derived from the pinned app's
-Gradle metadata. The current release line is `0.119.0-beta.3-rebroad.3`
-(Android versionCode `1027`).
+Gradle metadata. The current release line is `0.119.0-beta.3-rebroad.4`
+(Android versionCode `1028`).
 
 These CI APKs use the **public, untrusted Termux test key**. They cannot
 update F-Droid or private-key signed installations. Back up your files before
@@ -52,7 +52,12 @@ curl -fsSL https://raw.githubusercontent.com/rebroad/termux-packages/master/scri
 bash /tmp/rebroad-enable-repo.sh
 ```
 
-Check candidate preference with `apt-cache policy sccache`.
+This release rotates ReBroad's archive key on upgrade without overwriting
+other mirror selections; if APT still reports a missing key, run the setup
+script above to refresh it explicitly.
+Check candidate preference with `apt-cache policy sccache`, then use
+`pkg install sccache`. Expected ReBroad version: `0.18.0+rebroad1`, priority
+1001. Rust incremental snapshot support is experimental on Android.
 
 ## Install all three ReBroad APKs
 
@@ -61,7 +66,7 @@ After downloading the main, Termux:API and Termux:Boot APKs from the same
 install them individually (main app first). From the download directory:
 
 ```sh
-adb install -r termux-app-0.119.0-beta.3-rebroad.3.apk
+adb install -r termux-app-0.119.0-beta.3-rebroad.4.apk
 adb install -r termux-api-0.53.0-rebroad.1.apk
 adb install -r termux-boot-0.8.1-rebroad.1.apk
 ```

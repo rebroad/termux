@@ -7,7 +7,7 @@ set -euo pipefail
 overlay="$1"
 repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 pubkey="$repo_dir/assets/rebroad-archive-key.asc"
-pubkey_sha256="781529826d4994690e2466a094bce31f53ae154c14c463accb1ff1ca18cc78eb"
+pubkey_sha256="49f10af5d74a3e79508693d80a4ccaa9f86200ce654b6b853ac0ebade6577bfc"
 repo_url="https://raw.githubusercontent.com/rebroad/termux-packages/apt-repo"
 prefix="/data/data/com.termux/files/usr"
 

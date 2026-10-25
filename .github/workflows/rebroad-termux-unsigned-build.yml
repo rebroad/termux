@@ -89,8 +89,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'versionName "0.119.0-beta.3-rebroad.3"' termux-app/app/build.gradle
-          grep -Fq 'versionCode 1027' termux-app/app/build.gradle
+          grep -Fq 'versionName "0.119.0-beta.3-rebroad.4"' termux-app/app/build.gradle
+          grep -Fq 'versionCode 1028' termux-app/app/build.gradle
           grep -Fq 'Running Termux bootstrap second stage.' termux-app/app/src/main/java/com/termux/app/TermuxInstaller.java
 
       - name: Build test-signed release APK
@@ -127,6 +127,7 @@ jobs:
           - Source: rebroad/termux-app submodule, linearly rebased onto upstream F-Droid beta v0.119.0-beta.3.
           - Includes customized arm64 termux-exec bootstrap.
           - Runs the upstream beta bootstrap second stage during installation.
+          - Includes a signed priority APT repository with custom ReBroad sccache (aarch64).
           - Signed using the PUBLIC, UNTRUSTED Termux test key (not a private production key).
           - SHA256SUMS.txt contains the APK checksum.
 
