@@ -89,8 +89,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'versionName "0.119.0-beta.3-rebroad.2"' termux-app/app/build.gradle
-          grep -Fq 'versionCode 1026' termux-app/app/build.gradle
+          grep -Fq 'versionName "0.119.0-beta.3-rebroad.3"' termux-app/app/build.gradle
+          grep -Fq 'versionCode 1027' termux-app/app/build.gradle
           grep -Fq 'Running Termux bootstrap second stage.' termux-app/app/src/main/java/com/termux/app/TermuxInstaller.java
 
       - name: Build test-signed release APK

@@ -13,14 +13,19 @@ Open the newest ReBroad **prerelease** and expand **Assets**. The APK is named
 You can also download the same APK from [GitHub Actions](https://github.com/rebroad/termux/actions/workflows/rebroad-termux-unsigned-build.yml)
 after a successful build.
 
-The current ReBroad version is `0.119.0-beta.3-rebroad.2` with Android
-`versionCode=1026`, based on upstream F-Droid beta `v0.119.0-beta.3` with ReBroad
+The current ReBroad version is `0.119.0-beta.3-rebroad.3` with Android
+`versionCode=1027`, based on upstream F-Droid beta `v0.119.0-beta.3` with ReBroad
 customizations. This higher version code **does not** make the APK upgrade
 compatible with F-Droid: the public, untrusted Termux test certificate is
 different from F-Droid's. Back up existing data before switching signing
 sources; companion apps must be signed with a matching key.
 
 ## Preferred signed ReBroad packages
+
+Existing Termux installations upgraded from earlier ReBroad APKs receive the
+APT source through a one-time migration when they next launch the app. This
+keeps existing mirror choices and never overwrites customized APT files.
+
 
 The aarch64 APK now embeds a dedicated, **signed** APT source hosted at
 `https://raw.githubusercontent.com/rebroad/termux-packages/apt-repo`.

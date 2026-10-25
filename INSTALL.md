@@ -10,8 +10,8 @@ For the customized main Termux APK, visit
 [ReBroad Termux Releases](https://github.com/rebroad/termux/releases).
 Download `termux-app-VERSION.apk` and optionally verify it against
 `SHA256SUMS.txt`. The filename/version are derived from the pinned app's
-Gradle metadata. The current release line is `0.119.0-beta.3-rebroad.2`
-(Android versionCode `1026`).
+Gradle metadata. The current release line is `0.119.0-beta.3-rebroad.3`
+(Android versionCode `1027`).
 
 These CI APKs use the **public, untrusted Termux test key**. They cannot
 update F-Droid or private-key signed installations. Back up your files before
@@ -40,7 +40,7 @@ the username and hostname without a first-run GUI.
 
 ## ReBroad APT repository priority
 
-Fresh installations of the aarch64 APK already have ReBroad's signed source
+Fresh installations and upgrades of the aarch64 APK have ReBroad's signed source
 enabled with APT priority 1001. It takes precedence over upstream mirrors
 only for packages ReBroad publishes; all standard Termux mirrors remain
 available for other packages. See
@@ -61,7 +61,7 @@ After downloading the main, Termux:API and Termux:Boot APKs from the same
 install them individually (main app first). From the download directory:
 
 ```sh
-adb install -r termux-app-0.119.0-beta.3-rebroad.2.apk
+adb install -r termux-app-0.119.0-beta.3-rebroad.3.apk
 adb install -r termux-api-0.53.0-rebroad.1.apk
 adb install -r termux-boot-0.8.1-rebroad.1.apk
 ```
