@@ -1,0 +1,60 @@
+name: Normalize ReBroad APK release status
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - .github/workflows/normalize-rebroad-releases.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Convert existing verified APK releases to regular GitHub releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Only update the prerelease metadata for these exact existing releases.
+          # Fail closed if the numeric GitHub release ID, tag or main APK differs.
+          releases=(
+            '423228896|rebroad-v0.118.0-rebroad.1-de38aae|termux-app-0.118.0-rebroad.1.apk'
+            '423305067|rebroad-v0.119.0-beta.3-rebroad.1-d934b98|termux-app-0.119.0-beta.3-rebroad.1.apk'
+            '423319826|rebroad-v0.119.0-beta.3-rebroad.2-8053611|termux-app-0.119.0-beta.3-rebroad.2.apk'
+          )
+
+          for entry in "${releases[@]}"; do
+            IFS='|' read -r release_id expected_tag expected_apk <<< "$entry"
+            release=$(gh api "repos/$GH_REPO/releases/$release_id")
+            actual_id=$(jq -r '.id' <<< "$release")
+            actual_tag=$(jq -r '.tag_name' <<< "$release")
+            actual_apk=$(jq -r --arg expected "$expected_apk" '.assets[] | select(.name == $expected) | .name' <<< "$release")
+            is_draft=$(jq -r '.draft' <<< "$release")
+            [[ "$actual_id" == "$release_id" && "$actual_tag" == "$expected_tag" && "$actual_apk" == "$expected_apk" && "$is_draft" == false ]] || {
+              echo "::error::Refusing to change release $release_id: identity or APK asset mismatch."
+              exit 1
+            }
+
+            current_status=$(jq -r '.prerelease' <<< "$release")
+            if [[ "$current_status" == true ]]; then
+              gh api --method PATCH "repos/$GH_REPO/releases/$release_id" -F prerelease=false > /dev/null
+              echo "Made $expected_tag a regular GitHub release."
+            elif [[ "$current_status" == false ]]; then
+              echo "Already a regular GitHub release: $expected_tag"
+            else
+              echo "::error::Unexpected prerelease value for $expected_tag"
+              exit 1
+            fi
+
+            final_status=$(gh api "repos/$GH_REPO/releases/$release_id" --jq '.prerelease')
+            [[ "$final_status" == false ]] || { echo "::error::Release did not update: $expected_tag"; exit 1; }
+          done
+
+          echo "All three existing ReBroad APK releases are regular releases."

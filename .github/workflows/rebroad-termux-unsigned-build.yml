@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    if: ${{ github.event.head_commit.message != 'Install guarded one-time beta release cleanup' && !contains(github.event.head_commit.message, '[companions-only]') }}
+    if: ${{ github.event.head_commit.message != 'Install guarded one-time beta release cleanup' && !contains(github.event.head_commit.message, '[companions-only]') && !contains(github.event.head_commit.message, '[metadata-only]') }}
     runs-on: ubuntu-latest
     env:
       TERMUX_BUILD_ROOT: ${{ github.workspace }}
@@ -135,10 +135,10 @@ jobs:
           EOF
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" "$APK_PATH" dist/SHA256SUMS.txt --clobber
+            gh release edit "$RELEASE_TAG" --prerelease=false
           else
             gh release create "$RELEASE_TAG" "$APK_PATH" dist/SHA256SUMS.txt \
               --target "$GITHUB_SHA" \
               --title "ReBroad Termux $VERSION_NAME (test signed)" \
-              --notes-file "$RUNNER_TEMP/release-notes.md" \
-              --prerelease
+              --notes-file "$RUNNER_TEMP/release-notes.md"
           fi
