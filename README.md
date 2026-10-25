@@ -13,7 +13,7 @@ Open the newest ReBroad **prerelease** and expand **Assets**. The APK is named
 You can also download the same APK from [GitHub Actions](https://github.com/rebroad/termux/actions/workflows/rebroad-termux-unsigned-build.yml)
 after a successful build.
 
-The current ReBroad version is `0.119.0-beta.3-rebroad.1` with Android
+The current ReBroad version is `0.118.0-rebroad.1` with Android
 `versionCode=1023`, based on upstream Termux `master` with ReBroad
 customizations. This higher version code **does not** make the APK upgrade
 compatible with F-Droid: the public, untrusted Termux test certificate is
