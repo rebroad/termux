@@ -79,7 +79,7 @@ jobs:
       - name: Upload arm64-universal APK for local signing
         uses: actions/upload-artifact@v6
         with:
-          name: termux-app-0.118.5-unsigned
+          name: termux-app-0.118.0-vc118-unsigned
           path: termux-app/app/build/outputs/apk/release/termux-app_apt-android-7-release_universal.apk
           if-no-files-found: error
           retention-days: 3
