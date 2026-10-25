@@ -113,6 +113,9 @@ sed 's|@TERMUX__PREFIX@|/data/data/com.termux/files/usr|g' \
     > "$bootstrap_overlay/bin/termux-identity"
 chmod 700 "$bootstrap_overlay/bin/termux-identity"
 
+# Embed signed custom APT feed only after the standard upstream bootstrap was loaded.
+bash "$collection_dir/scripts/rebroad-apt-overlay.sh" "$bootstrap_overlay"
+
 echo "Embedding customized aarch64 termux-exec preload"
 (cd "$bootstrap_overlay" && zip -q "$app_build_dir/app/src/main/cpp/bootstrap-aarch64.zip" \
     lib/libtermux-exec-ld-preload.so \
@@ -122,7 +125,10 @@ echo "Embedding customized aarch64 termux-exec preload"
     bin/termux-exec-ld-preload-lib \
     bin/termux-exec-system-linker-exec \
     bin/termux-identity \
-    var/lib/dpkg/info/termux-exec.postinst)
+    var/lib/dpkg/info/termux-exec.postinst \
+    etc/apt/keyrings/rebroad.asc \
+    etc/apt/sources.list.d/rebroad.list \
+    etc/apt/preferences.d/00-rebroad)
 
 # ndk-build does not track the .incbin archive as a dependency. Remove only
 # the generated release native objects so the updated archive is embedded.

@@ -13,12 +13,29 @@ Open the newest ReBroad **prerelease** and expand **Assets**. The APK is named
 You can also download the same APK from [GitHub Actions](https://github.com/rebroad/termux/actions/workflows/rebroad-termux-unsigned-build.yml)
 after a successful build.
 
-The current ReBroad version is `0.119.0-beta.3-rebroad.1` with Android
-`versionCode=1025`, based on upstream F-Droid beta `v0.119.0-beta.3` with ReBroad
+The current ReBroad version is `0.119.0-beta.3-rebroad.2` with Android
+`versionCode=1026`, based on upstream F-Droid beta `v0.119.0-beta.3` with ReBroad
 customizations. This higher version code **does not** make the APK upgrade
 compatible with F-Droid: the public, untrusted Termux test certificate is
 different from F-Droid's. Back up existing data before switching signing
 sources; companion apps must be signed with a matching key.
+
+## Preferred signed ReBroad packages
+
+The aarch64 APK now embeds a dedicated, **signed** APT source hosted at
+`https://raw.githubusercontent.com/rebroad/termux-packages/apt-repo`.
+Its `Origin: ReBroad` packages receive APT priority **1001**; packages not
+provided by ReBroad still resolve from your standard Termux mirrors.
+The public archive key is fingerprint
+`D707B230D33E2AA09C0B979FAC3209C81372E53A`.
+This is **separate from** the Android APK test-signing certificate.
+
+In existing Termux installations, run
+`bash <(curl -fsSL https://raw.githubusercontent.com/rebroad/termux-packages/master/scripts/rebroad-enable-repo.sh)`
+to opt in without reinstalling. The new `sccache` native package is
+experimental and will appear in `apt-cache policy sccache` only once it
+has built and been published under the archive's signing key. See
+[APT setup notes](https://github.com/rebroad/termux-packages/blob/master/docs/rebroad-apt-repository.md).
 
 ## Companion APKs
 
