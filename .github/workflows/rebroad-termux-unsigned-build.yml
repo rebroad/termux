@@ -79,35 +79,48 @@ jobs:
       - name: Build unsigned release APK
         run: ./scripts/build-termux.sh
 
-      - name: Check signed APK and prepare download
+      - name: Prepare dynamically versioned, verified APK
+        id: package
         shell: bash
-        run: |
-          set -euo pipefail
-          apk=termux-app/app/build/outputs/apk/release/termux-app_apt-android-7-release_universal.apk
-          test -s "$apk"
-          mkdir -p dist
-          cp "$apk" dist/termux-app-0.118.0.apk
-          "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner" verify --verbose --print-certs dist/termux-app-0.118.0.apk
-          (cd dist && sha256sum termux-app-0.118.0.apk > SHA256SUMS.txt)
+        run: bash .github/scripts/package-release-apk.sh
 
-      - name: Upload APK build artifact
+      - name: Upload installable APK artifact
         uses: actions/upload-artifact@v6
         with:
-          name: termux-app-0.118.0
+          name: ${{ steps.package.outputs.artifact_name }}
           path: dist/
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish APK in Releases
+      - name: Publish APK in GitHub Releases
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ steps.package.outputs.release_tag }}
+          APK_PATH: ${{ steps.package.outputs.apk_path }}
+          VERSION_NAME: ${{ steps.package.outputs.version_name }}
+          VERSION_CODE: ${{ steps.package.outputs.version_code }}
         run: |
           set -euo pipefail
-          tag="rebroad-0.118.0-${GITHUB_SHA:0:7}"
-          gh release create "$tag" dist/termux-app-0.118.0.apk dist/SHA256SUMS.txt \
-            --target "$GITHUB_SHA" \
-            --title "ReBroad Termux 0.118.0 (test signed)" \
-            --notes "Universal Android APK using original Termux versionName 0.118.0 and versionCode 118. Uses the publicly available untrusted Termux test signing key, not a private release key. Back up existing installations before switching signing sources." \
-            --prerelease
+          cat > "$RUNNER_TEMP/release-notes.md" <<EOF
+          ReBroad Termux Android 7+ universal APK, built from the pinned ReBroad app fork.
+
+          - Version: `$VERSION_NAME` (Android versionCode `$VERSION_CODE`).
+          - Source: rebroad/termux-app submodule, rebased onto upstream master.
+          - Includes customized arm64 termux-exec bootstrap.
+          - Signed using the PUBLIC, UNTRUSTED Termux test key (not a private production key).
+          - SHA256SUMS.txt contains the APK checksum.
+
+          Warning: Not upgrade-compatible with F-Droid or private-key signed Termux installations.
+          Back up data before switching signing sources; companion apps must use a matching certificate.
+          EOF
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$APK_PATH" dist/SHA256SUMS.txt --clobber
+          else
+            gh release create "$RELEASE_TAG" "$APK_PATH" dist/SHA256SUMS.txt \
+              --target "$GITHUB_SHA" \
+              --title "ReBroad Termux $VERSION_NAME (test signed)" \
+              --notes-file "$RUNNER_TEMP/release-notes.md" \
+              --prerelease
+          fi

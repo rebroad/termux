@@ -4,6 +4,19 @@ This repository collects the Termux application repositories used for the
 rebroad build. The application source remains in the individual submodules;
 this document describes installing APKs to an Android device over USB.
 
+## Download a prebuilt APK
+
+For the customized main Termux APK, visit
+[ReBroad Termux Releases](https://github.com/rebroad/termux/releases).
+Download `termux-app-VERSION.apk` and optionally verify it against
+`SHA256SUMS.txt`. The filename/version are derived from the pinned app's
+Gradle metadata. The current release line is `0.119.0-beta.3-rebroad.1`
+(Android versionCode `1023`).
+
+These CI APKs use the **public, untrusted Termux test key**. They cannot
+update F-Droid or private-key signed installations. Back up your files before
+switching signing sources, and ensure companion apps use the same key.
+
 ## Prepare the repositories
 
 ```sh

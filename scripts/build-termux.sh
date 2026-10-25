@@ -49,7 +49,11 @@ if [[ "$signing_enabled" == 1 ]]; then
     export TERMUX_REBROAD_SIGNING_KEY_PASSWORD="$pass"
     unset pass
 else
-    echo "Building unsigned Termux APK for local signing"
+    if [[ "${TERMUX_CI_TEST_KEY_SIGNING:-0}" == 1 ]]; then
+        echo "Building Termux APK with public untrusted test-key signing"
+    else
+        echo "Building unsigned Termux APK for local signing"
+    fi
 fi
 app_git_commit=$(git -C "$app_source_dir" rev-parse HEAD | cut -c1-10)
 export TERMUX_GIT_COMMIT="$app_git_commit"
