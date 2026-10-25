@@ -1,0 +1,63 @@
+name: Delete superseded mislabelled beta release
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - .github/workflows/cleanup-mislabelled-beta.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify replacement APK and remove only the obsolete beta release and tag
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          replacement_tag="rebroad-v0.118.0-rebroad.1-de38aae"
+          old_tag="rebroad-v0.119.0-beta.3-rebroad.1-a2bc816"
+          replacement_apk="termux-app-0.118.0-rebroad.1.apk"
+          obsolete_apk="termux-app-0.119.0-beta.3-rebroad.1.apk"
+
+          # Wait for the already-running replacement build to finish publishing.
+          ready=0
+          for attempt in $(seq 1 60); do
+            if gh release view "$replacement_tag" --json assets --jq '.assets[].name' 2>/dev/null | grep -Fxq "$replacement_apk"; then
+              ready=1
+              break
+            fi
+            sleep 10
+          done
+          if [[ "$ready" != 1 ]]; then
+            echo "Corrected release has not been verified yet. Keeping the old release." >&2
+            exit 1
+          fi
+
+          # Confirm the corrected release offers both assets, then download and
+          # validate its signed-build checksum before performing any deletion.
+          gh release view "$replacement_tag" --json assets --jq '.assets[].name' | grep -Fxq 'SHA256SUMS.txt'
+          mkdir -p verify-release
+          gh release download "$replacement_tag" --pattern "$replacement_apk" --pattern SHA256SUMS.txt --dir verify-release
+          (cd verify-release && sha256sum -c SHA256SUMS.txt)
+          test "$(stat -c '%s' "verify-release/$replacement_apk")" -gt 1000000
+
+          # Exact release ID prevents deleting a different release with a reused tag.
+          obsolete_release_id=$(gh api "repos/$GH_REPO/releases/tags/$old_tag" --jq '.id')
+          [[ "$obsolete_release_id" == "423223779" ]] || {
+            echo "The obsolete tag no longer identifies the expected release." >&2
+            exit 1
+          }
+          gh release view "$old_tag" --json assets --jq '.assets[].name' | grep -Fxq "$obsolete_apk"
+
+          gh release delete "$old_tag" --cleanup-tag --yes
+          if gh release view "$old_tag" >/dev/null 2>&1; then
+            echo "Obsolete release still exists after deletion." >&2
+            exit 1
+          fi
+          echo "Removed the mislabelled beta release and its git tag, after verifying the corrected APK."
