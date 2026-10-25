@@ -36,7 +36,7 @@ jobs:
           packages: ""
 
       - name: Install Android platform and NDK packages
-        run: sdkmanager --install "platforms;android-36" "build-tools;36.0.0" "ndk;29.0.14206865"
+        run: sdkmanager --install "platforms;android-30" "platforms;android-36" "build-tools;36.0.0" "ndk;22.1.7171670" "ndk;29.0.14206865"
 
       - name: Prepare Termux Core headers and static library
         shell: bash
@@ -77,7 +77,23 @@ jobs:
             TERMUX_CORE_PKG__INSTALL_PREFIX="$RUNNER_TEMP/termux-core-root/data/data/com.termux/files/usr" \
             CC="$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
 
-      - name: Build unsigned release APK
+      # Beta uses Gradle 7.2 / AGP 4.2.2 under Java 11. New SDK manager and
+      # our native termux-exec build require the earlier Java 17 environment.
+      - name: Switch to Java 11 for F-Droid beta Gradle
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Verify rebased F-Droid beta version and bootstrap second stage
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'versionName "0.119.0-beta.3-rebroad.1"' termux-app/app/build.gradle
+          grep -Fq 'versionCode 1025' termux-app/app/build.gradle
+          grep -Fq 'Running Termux bootstrap second stage.' termux-app/app/src/main/java/com/termux/app/TermuxInstaller.java
+
+      - name: Build test-signed release APK
         run: ./scripts/build-termux.sh
 
       - name: Prepare dynamically versioned, verified APK
@@ -108,8 +124,9 @@ jobs:
           ReBroad Termux Android 7+ universal APK, built from the pinned ReBroad app fork.
 
           - Version: $VERSION_NAME (Android versionCode $VERSION_CODE).
-          - Source: rebroad/termux-app submodule, rebased onto upstream master.
+          - Source: rebroad/termux-app submodule, linearly rebased onto upstream F-Droid beta v0.119.0-beta.3.
           - Includes customized arm64 termux-exec bootstrap.
+          - Runs the upstream beta bootstrap second stage during installation.
           - Signed using the PUBLIC, UNTRUSTED Termux test key (not a private production key).
           - SHA256SUMS.txt contains the APK checksum.
 

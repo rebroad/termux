@@ -10,8 +10,8 @@ For the customized main Termux APK, visit
 [ReBroad Termux Releases](https://github.com/rebroad/termux/releases).
 Download `termux-app-VERSION.apk` and optionally verify it against
 `SHA256SUMS.txt`. The filename/version are derived from the pinned app's
-Gradle metadata. The current release line is `0.118.0-rebroad.1`
-(Android versionCode `1023`).
+Gradle metadata. The current release line is `0.119.0-beta.3-rebroad.1`
+(Android versionCode `1025`).
 
 These CI APKs use the **public, untrusted Termux test key**. They cannot
 update F-Droid or private-key signed installations. Back up your files before
@@ -45,7 +45,7 @@ After downloading the main, Termux:API and Termux:Boot APKs from the same
 install them individually (main app first). From the download directory:
 
 ```sh
-adb install -r termux-app-0.118.0-rebroad.1.apk
+adb install -r termux-app-0.119.0-beta.3-rebroad.1.apk
 adb install -r termux-api-0.53.0-rebroad.1.apk
 adb install -r termux-boot-0.8.1-rebroad.1.apk
 ```
