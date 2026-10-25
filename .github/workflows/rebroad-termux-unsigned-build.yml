@@ -106,7 +106,7 @@ jobs:
           cat > "$RUNNER_TEMP/release-notes.md" <<EOF
           ReBroad Termux Android 7+ universal APK, built from the pinned ReBroad app fork.
 
-          - Version: `$VERSION_NAME` (Android versionCode `$VERSION_CODE`).
+          - Version: $VERSION_NAME (Android versionCode $VERSION_CODE).
           - Source: rebroad/termux-app submodule, rebased onto upstream master.
           - Includes customized arm64 termux-exec bootstrap.
           - Signed using the PUBLIC, UNTRUSTED Termux test key (not a private production key).
