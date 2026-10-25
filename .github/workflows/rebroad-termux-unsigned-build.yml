@@ -1,10 +1,12 @@
-name: ReBroad Termux unsigned release build
+name: ReBroad Termux signed APK release
 
 on:
   workflow_dispatch:
+  push:
+    branches: [master]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -13,6 +15,7 @@ jobs:
       TERMUX_BUILD_ROOT: ${{ github.workspace }}
       TERMUX_EXEC_BUILD_DIR: ${{ github.workspace }}/termux-exec-package
       TERMUX_ALLOW_UNSIGNED_BUILD: "1"
+      TERMUX_CI_TEST_KEY_SIGNING: "1"
 
     steps:
       - name: Check out source and pinned app fork
@@ -76,10 +79,35 @@ jobs:
       - name: Build unsigned release APK
         run: ./scripts/build-termux.sh
 
-      - name: Upload arm64-universal APK for local signing
+      - name: Check signed APK and prepare download
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk=termux-app/app/build/outputs/apk/release/termux-app_apt-android-7-release_universal.apk
+          test -s "$apk"
+          mkdir -p dist
+          cp "$apk" dist/termux-app-0.118.0.apk
+          "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner" verify --verbose --print-certs dist/termux-app-0.118.0.apk
+          (cd dist && sha256sum termux-app-0.118.0.apk > SHA256SUMS.txt)
+
+      - name: Upload APK build artifact
         uses: actions/upload-artifact@v6
         with:
-          name: termux-app-0.118.0-vc118-unsigned
-          path: termux-app/app/build/outputs/apk/release/termux-app_apt-android-7-release_universal.apk
+          name: termux-app-0.118.0
+          path: dist/
           if-no-files-found: error
-          retention-days: 3
+          retention-days: 30
+
+      - name: Publish APK in Releases
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag="rebroad-0.118.0-${GITHUB_SHA:0:7}"
+          gh release create "$tag" dist/termux-app-0.118.0.apk dist/SHA256SUMS.txt \
+            --target "$GITHUB_SHA" \
+            --title "ReBroad Termux 0.118.0 (test signed)" \
+            --notes "Universal Android APK using original Termux versionName 0.118.0 and versionCode 118. Uses the publicly available untrusted Termux test signing key, not a private release key. Back up existing installations before switching signing sources." \
+            --prerelease
