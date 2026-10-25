@@ -1,0 +1,105 @@
+name: Validate F-Droid beta ReBroad integration APK
+
+on:
+  push:
+    branches: [stage-fdroid-beta-0.119.0-beta.3]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      TERMUX_BUILD_ROOT: ${{ github.workspace }}
+      TERMUX_EXEC_BUILD_DIR: ${{ github.workspace }}/termux-exec-package
+      TERMUX_ALLOW_UNSIGNED_BUILD: "1"
+      TERMUX_CI_TEST_KEY_SIGNING: "1"
+
+    steps:
+      - name: Check out source and pinned app fork
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK and NDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ""
+
+      - name: Install Android platform and NDK packages
+        run: sdkmanager --install "platforms;android-30" "platforms;android-36" "build-tools;36.0.0" "ndk;22.1.7171670" "ndk;29.0.14206865"
+
+      - name: Prepare Termux Core headers and static library
+        shell: bash
+        run: |
+          set -euo pipefail
+          core_root="$RUNNER_TEMP/termux-core-root"
+          core_prefix="$core_root/data/data/com.termux/files/usr"
+          mkdir -p "$core_root"
+          base_url=https://packages.termux.dev/apt/termux-main/pool/main/t
+
+          # These pinned files match termux-core 0.4.0-1 from the signed Termux index.
+          for package in termux-core termux-core-static; do
+            deb="$RUNNER_TEMP/$package.deb"
+            url="$base_url/$package/${package}_0.4.0-1_aarch64.deb"
+            curl --fail --location --silent --show-error "$url" --output "$deb"
+            case "$package" in
+              termux-core)
+                expected_sha256=4f809d70eff0afa8c1beccbf4b5f65e0f59207867462a3a2f66b3e2fcd64b057
+                ;;
+              termux-core-static)
+                expected_sha256=3494123a066b38ea7e14f1f217cf8aaffaea74e8d87abb9f70b76ee27ae1e019
+                ;;
+            esac
+            printf '%s  %s\n' "$expected_sha256" "$deb" | sha256sum --check --status
+            dpkg-deb --extract "$deb" "$core_root"
+          done
+
+          test -d "$core_prefix/include/termux-core/termux/termux_core__nos__c"
+          test -f "$core_prefix/lib/libtermux-core_nos_c_tre.a"
+
+      - name: Build customized Termux exec for arm64
+        shell: bash
+        run: |
+          set -euo pipefail
+          ndk_root="$ANDROID_SDK_ROOT/ndk/29.0.14206865"
+          make -C termux-exec-package \
+            TERMUX_EXEC_PKG__ARCH=aarch64 \
+            TERMUX_CORE_PKG__INSTALL_PREFIX="$RUNNER_TEMP/termux-core-root/data/data/com.termux/files/usr" \
+            CC="$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
+
+      - name: Use Java 11 for F-Droid beta Gradle 7.2
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Verify beta baseline and version
+        run: |
+          grep -Fq 'versionName "0.119.0-beta.3-rebroad.1"' termux-app/app/build.gradle
+          grep -Fq 'versionCode 1025' termux-app/app/build.gradle
+
+      - name: Build unsigned release APK
+        run: ./scripts/build-termux.sh
+
+      - name: Prepare dynamically versioned, verified APK
+        id: package
+        shell: bash
+        run: bash .github/scripts/package-release-apk.sh
+
+      - name: Upload installable APK artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ steps.package.outputs.artifact_name }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+
