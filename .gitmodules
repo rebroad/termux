@@ -13,3 +13,6 @@
 [submodule "termux-tasker"]
 	path = termux-tasker
 	url = https://github.com/rebroad/termux-tasker.git
+[submodule "termux-packages"]
+	path = termux-packages
+	url = https://github.com/rebroad/termux-packages.git
